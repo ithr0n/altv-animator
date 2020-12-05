@@ -113,7 +113,7 @@ alt.everyTick(() => {
 
     drawLongText('Animation:', 0.75, 0.72, 0.86, 4, 255, 255, 255, 255, true, true, false)
     drawLongText(`${selectedDictionary.DictionaryName}`, 0.75, 0.77, 0.48, 4, 255, 255, 0, 255, true, true, false)
-    drawLongText(`${selectedDictionary.Animations[selectedAnimNameIndex]}`, 0.75, 0.8, 0.48, 4, 255, 255, 255, 255, true, true, false)
+    drawLongText(`${selectedDictionary.Animations[selectedAnimNameIndex]}`, 0.75, 0.8, 0.48, 4, 70, 126, 159, 255, true, true, false)
 })
 
 const gotoNextAnimation = () => {
@@ -310,6 +310,7 @@ const animatorGoto = (args) => {
         }
 
         if (!dictValid) {
+            alt.log('test')
             selectedAnimDictIndex = oldAnimDictIndex
             return
         }
