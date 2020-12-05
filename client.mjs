@@ -1,6 +1,9 @@
 /**
  * Written by ithr0n (#5837)
  *
+ * Disabled NativeUI, because strings are too long for the menu.
+ * If you want to enable it, just uncomment the lines.
+ *
  * Credits to:
  * - DurtyFree: https://github.com/DurtyFree/gta-v-data-dumps & https://github.com/DurtyFree/alt-V-NativeUI
  * - Hazes: https://forum.gtanet.work/index.php?threads/animator-animation-viewer.4235/
@@ -8,7 +11,7 @@
 
 import * as alt from 'alt-client'
 import * as natives from 'natives'
-import * as NativeUI from './NativeUI/NativeUI'
+//import * as NativeUI from './NativeUI/NativeUI'
 
 const animDicts = JSON.parse(alt.File.read('./animDictsCompact.json'))
 const player = alt.Player.local
@@ -24,58 +27,26 @@ alt.on('consoleCommand', (command, ...args) => {
             switch (args[0]) {
                 case 'help': {
                     alt.log('[Animator] How to use:')
-                    alt.log('Type "animator" to start or stop the animator.')
-                    alt.log('Type "animator help" for in-game help.')
-                    alt.log('Type "animator goto [dictionary] [animation]" to directly go to the defined animation (string or int).')
-                    alt.log('Type "animator ui" to stop currently playing animation.')
-                    alt.log('')
-                    alt.log('Use LEFT and RIGHT arrow keys to cycle through animations.')
-                    alt.log('Use UP and DOWN arrow keys to cycle through 100 animations at once.')
+                    alt.log('  * Type "animator" to start or stop the animator.')
+                    alt.log('  * Type "animator help" for in-game help.')
+                    alt.log('  * Type "animator goto [dictionary] [animation]" to directly go to the defined animation (string or int).')
+                    //alt.log('Type "animator ui" to stop currently playing animation.')
+                    alt.log('  Use LEFT and RIGHT arrow keys to cycle through animations.')
+                    alt.log('  Use UP and DOWN arrow keys to cycle through dictionaries.')
 
                     break
                 }
 
-                case 'ui': {
+                /*case 'ui': {
                     if (menu.Visible) {
                         menu.Close()
                     } else {
                         menu.Open()
                     }
-                }
+                }*/
 
                 case 'goto': {
-                    if (args.length >= 2) {
-                        let dictValid = false
-                        if (+args[1]) {
-                            selectedAnimDictIndex = +args[1]
-                            selectedDictionary = animDicts[selectedAnimDictIndex]
-                            dictValid = true
-                        } else {
-                            for (let i = 0; i < animDicts.length; i++) {
-                                if (animDicts[i].DictionaryName === args[1]) {
-                                    selectedAnimDictIndex = i
-                                    selectedDictionary = animDicts[selectedAnimDictIndex]
-                                    dictValid = true
-                                }
-                            }
-                        }
-
-                        selectedAnimNameIndex = 0
-
-                        if (args.length >= 3) {
-                            if (+args[2]) {
-                                selectedAnimNameIndex = +args[2]
-                            } else {
-                                for (let i = 0; i < selectedDictionary.Animations.length; i++) {
-                                    if (selectedDictionary.Animations[i] === args[2]) {
-                                        selectedAnimNameIndex = i
-                                    }
-                                }
-                            }
-                        }
-
-                        playAnim()
-                    }
+                    animatorGoto(args)
                     break
                 }
             }
@@ -107,9 +78,12 @@ alt.on('keyup', (key) => {
 
         case 0x26: {
             // up arrow
-            for (let i = 0; i < 100; i++) {
-                gotoNextAnimation()
+            if (++selectedAnimDictIndex >= animDicts.length) {
+                selectedAnimDictIndex = 0
             }
+            selectedDictionary = animDicts[selectedAnimDictIndex]
+            selectedAnimNameIndex = 0
+            playAnim()
             break
         }
 
@@ -121,9 +95,12 @@ alt.on('keyup', (key) => {
 
         case 0x28: {
             // down arrow
-            for (let i = 0; i < 100; i++) {
-                gotoPreviousAnimation()
+            if (--selectedAnimDictIndex < 0) {
+                selectedAnimDictIndex = animDicts.length - 1
             }
+            selectedDictionary = animDicts[selectedAnimDictIndex]
+            selectedAnimNameIndex = 0
+            playAnim()
             break
         }
     }
@@ -134,8 +111,9 @@ alt.everyTick(() => {
         return
     }
 
-    drawLongText(`Dictionary (idx ${selectedAnimDictIndex}): ${selectedDictionary.DictionaryName}`, 0.75, 0.75, 0.8, 7, 255, 255, 255, 255, true, true, true)
-    drawLongText(`Animation Name: ${selectedDictionary.Animations[selectedAnimNameIndex]}`, 0.75, 0.85, 0.8, 7, 255, 255, 255, 255, true, true, true)
+    drawLongText('Animation:', 0.75, 0.72, 0.86, 4, 255, 255, 255, 255, true, true, false)
+    drawLongText(`${selectedDictionary.DictionaryName}`, 0.75, 0.77, 0.48, 4, 255, 255, 0, 255, true, true, false)
+    drawLongText(`${selectedDictionary.Animations[selectedAnimNameIndex]}`, 0.75, 0.8, 0.48, 4, 255, 255, 255, 255, true, true, false)
 })
 
 const gotoNextAnimation = () => {
@@ -206,25 +184,19 @@ const playAnim = () => {
             selectedDictionary.DictionaryName,
             selectedDictionary.Animations[selectedAnimNameIndex],
             1, // speed, always 1
-            -1, // speed multiplier, always -1
-            -1, // duration
+            -1, // speed multiplier - dunno, always -1
+            -1, // duration, always -1 works :)
             1, // flags: repeat
-            1, // playbackrate, always 1
+            1, // playbackrate - dunno, always 1
             false,
             false,
             false
         )
     })
 
-    /*
-    NativeUI.MidsizedMessage.ShowMidsizedShardMessage(
-        `Dictionary (${selectedAnimDictIndex}): ${selectedDictionary.DictionaryName}`,
-        `Animation: ${selectedDictionary.Animations[selectedAnimNameIndex]}`,
-        NativeUI.HudColor.HUD_COLOUR_BLACK,
-        true,
-        true
-    )
-    */
+    alt.log('[Animator]')
+    alt.log(`  Dictionary: ${selectedDictionary.DictionaryName}`)
+    alt.log(`  Animation: ${selectedDictionary.Animations[selectedAnimNameIndex]}`)
 }
 
 const loadAnim = (dictName) => {
@@ -258,7 +230,15 @@ const loadAnim = (dictName) => {
     })
 }
 
-// ui
+// ui - works, but strings are too long for NativeUI
+/*
+const getDictsAsItemCollection = () => {
+    const items = []
+    animDicts.forEach((e) => items.push(e.DictionaryName))
+
+    return new NativeUI.ItemsCollection(items)
+}
+
 const getAnimsForSelectedDictionaryAsItemCollection = () => {
     const items = []
     selectedDictionary.Animations.forEach((e) => items.push(e))
@@ -266,38 +246,8 @@ const getAnimsForSelectedDictionaryAsItemCollection = () => {
     return new NativeUI.ItemsCollection(items)
 }
 
-const onAnimDictDynamicListItemChange = (item, selectedValue, changeDirection) => {
-    if (changeDirection === NativeUI.ChangeDirection.Right) {
-        if (++selectedAnimDictIndex >= animDicts.length) {
-            selectedAnimDictIndex = 0
-        }
-    } else {
-        if (--selectedAnimDictIndex < 0) {
-            selectedAnimDictIndex = animDicts.length - 1
-        }
-    }
-    selectedDictionary = animDicts[selectedAnimDictIndex]
-    selectedAnimNameIndex = 0
-
-    animList.setCollection(getAnimsForSelectedDictionaryAsItemCollection())
-    animList.Index = 0
-
-    if (playButton.Checked) {
-        playAnim()
-    }
-
-    return selectedDictionary.DictionaryName
-}
-
-const dictList = new NativeUI.UIMenuDynamicListItem(
-    'Dictionary:',
-    onAnimDictDynamicListItemChange,
-    'Select the animation dictionary',
-    () => selectedDictionary.DictionaryName
-)
-
+const dictList = new NativeUI.UIMenuListItem('Dictionary:', 'Select the animation dictionary', getDictsAsItemCollection())
 const animList = new NativeUI.UIMenuListItem('Animation:', 'Select the animation name', getAnimsForSelectedDictionaryAsItemCollection())
-
 const playButton = new NativeUI.UIMenuCheckboxItem('Play Animation', false)
 
 let menu = new NativeUI.Menu('Animator', 'Try out all the animations', new NativeUI.Point(50, 50))
@@ -306,18 +256,19 @@ menu.AddItem(dictList)
 menu.AddItem(animList)
 menu.AddItem(playButton)
 
-menu.ItemSelect.on((selectedItem, selectedItemIndex) => {
-    if (selectedItem === dictList) {
-        if (selectedItem.Checked) {
-            playAnim()
-        } else {
-            stopAnim()
-        }
-    }
-})
-
 menu.ListChange.on((item, newListItemIndex) => {
-    if (item === animList) {
+    if (item === dictList) {
+        selectedAnimDictIndex = newListItemIndex
+        selectedDictionary = animDicts[selectedAnimDictIndex]
+        selectedAnimNameIndex = 0
+
+        animList.setCollection(getAnimsForSelectedDictionaryAsItemCollection())
+        animList.Index = 0
+
+        if (playButton.Checked) {
+            playAnim()
+        }
+    } else if (item === animList) {
         selectedAnimNameIndex = newListItemIndex
 
         if (playButton.Checked) {
@@ -337,3 +288,53 @@ menu.CheckboxChange.on((item, checkedState) => {
         }
     }
 })
+*/
+
+const animatorGoto = (args) => {
+    if (args.length >= 2) {
+        const oldAnimDictIndex = selectedAnimDictIndex
+
+        let dictValid = false
+        if (+args[1] && +args[1] >= 0 && +args[1] < animDicts.length) {
+            selectedAnimDictIndex = +args[1]
+            selectedDictionary = animDicts[selectedAnimDictIndex]
+            dictValid = true
+        } else {
+            for (let i = 0; i < animDicts.length; i++) {
+                if (animDicts[i].DictionaryName === args[1]) {
+                    selectedAnimDictIndex = i
+                    selectedDictionary = animDicts[selectedAnimDictIndex]
+                    dictValid = true
+                }
+            }
+        }
+
+        if (!dictValid) {
+            selectedAnimDictIndex = oldAnimDictIndex
+            return
+        }
+
+        selectedAnimNameIndex = 0
+
+        if (args.length >= 3) {
+            if (+args[2] && +args[2] >= 0 && +args[2] < selectedDictionary.Animations.length) {
+                selectedAnimNameIndex = +args[2]
+            } else {
+                for (let i = 0; i < selectedDictionary.Animations.length; i++) {
+                    if (selectedDictionary.Animations[i] === args[2]) {
+                        selectedAnimNameIndex = i
+                    }
+                }
+            }
+        }
+
+        // update ui
+        /*
+        dictList.Index = selectedAnimDictIndex
+        animList.Collection = getAnimsForSelectedDictionaryAsItemCollection()
+        animList.Index = selectedAnimNameIndex
+        */
+
+        playAnim()
+    }
+}
